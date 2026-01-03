@@ -1,0 +1,82 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(#87ceeb, #fdf6e3);
+    font-family: Arial, sans-serif;
+}
+
+#startScreen {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(#fdf6e3, #c9a24d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 248, 220, 0.9);
+    padding: 12px;
+    border-radius: 10px;
+    color: #3b2a1a;
+    font-weight: bold;
+    z-index: 5;
+}
+
+.instructions {
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+#quizUI {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff8dc;
+    border: 3px solid #c9a24d;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    z-index: 6;
+}
+
+#quizUI input {
+    margin-top: 10px;
+    padding: 5px;
+    width: 120px;
+}
+
+#quizUI button {
+    margin-left: 10px;
+    background: #c9a24d;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #c9a24d;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-size: 18px;
+    z-index: 7;
+}
+
+.hidden {
+    display: none;
+}
