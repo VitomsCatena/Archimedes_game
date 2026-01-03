@@ -5,12 +5,16 @@ let yaw = 0;
 let keys = {};
 
 const MAX_LEVELS = 5;
-const ENEMY_SPEED = 0.02;
+const ENEMY_PATROL_SPEED = 0.02;
+const ENEMY_CHASE_SPEED = 0.045;
+const CHASE_RADIUS = 5;
+
 let currentLevel = 1;
 let puzzles = [];
 let walls = [];
 let enemies = [];
 let currentDoor = null;
+let doorAngle = 0;
 
 let solved = false;
 let quizActive = false;
@@ -19,6 +23,9 @@ let activeEnemy = null;
 
 let startTime = Date.now();
 let score = 0;
+
+const miniMap = document.getElementById("miniMap");
+const mapCtx = miniMap.getContext("2d");
 
 const levelText  = document.getElementById("levelText");
 const puzzleText = document.getElementById("puzzleText");
@@ -32,6 +39,10 @@ const submitAnswer = document.getElementById("submitAnswer");
 
 const popup = document.getElementById("popup");
 const startScreen = document.getElementById("startScreen");
+
+const ambientAudio = document.getElementById("ambientAudio");
+const enemyAudio   = document.getElementById("enemyAudio");
+const doorAudio    = document.getElementById("doorAudio");
 
 function getMainQuiz(level) {
     const quizzes = [
@@ -52,6 +63,8 @@ function getEnemyQuiz() {
 
 startScreen.onclick = () => {
     startScreen.style.display = "none";
+    ambientAudio.volume = 0.4;
+    ambientAudio.play();
     init();
     animate();
     document.body.requestPointerLock?.();
@@ -66,7 +79,6 @@ function init() {
     scene.background = new THREE.Color(0x87ceeb);
 
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(innerWidth, innerHeight);
     document.body.appendChild(renderer.domElement);
@@ -83,7 +95,6 @@ function init() {
     scene.add(playerMesh);
 
     buildLevel();
-
     window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
     window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 }
@@ -91,7 +102,7 @@ function init() {
 function buildLevel() {
     [...puzzles, ...walls, ...enemies].forEach(o => scene.remove(o));
     puzzles = []; walls = []; enemies = [];
-    solved = false; currentDoor = null;
+    solved = false; doorAngle = 0; currentDoor = null;
 
     const z = -(currentLevel - 1) * 20;
 
@@ -118,11 +129,18 @@ function buildLevel() {
     scene.add(rightWall); walls.push(rightWall);
 
     currentDoor = new THREE.Mesh(
-        new THREE.BoxGeometry(3, 4, 0.5),
+        new THREE.BoxGeometry(3, 4, 0.4),
         new THREE.MeshStandardMaterial({ color: 0xb8860b })
     );
-    currentDoor.position.set(0, 2, z - 7);
+    currentDoor.position.set(-1.5, 2, z - 7);
     scene.add(currentDoor); walls.push(currentDoor);
+
+    const knob = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0x333333 })
+    );
+    knob.position.set(0.1, 2, z - 6.8);
+    scene.add(knob);
 
     const puzzle = new THREE.Mesh(
         new THREE.SphereGeometry(0.6, 24, 24),
@@ -153,6 +171,7 @@ function animate() {
     requestAnimationFrame(animate);
     updateMovement();
     updateEnemies();
+    drawMiniMap();
     checkPuzzle();
     checkEnemies();
     checkDoor();
@@ -187,8 +206,36 @@ function updateMovement() {
 
 function updateEnemies() {
     enemies.forEach(e => {
-        e.position.x += ENEMY_SPEED * e.userData.direction;
-        if (Math.abs(e.position.x - e.userData.baseX) > 2) e.userData.direction *= -1;
+        const dist = Math.hypot(player.x - e.position.x, player.z - e.position.z);
+        if (dist < CHASE_RADIUS) {
+            enemyAudio.play();
+            const dx = player.x - e.position.x;
+            const dz = player.z - e.position.z;
+            const len = Math.hypot(dx, dz);
+            e.position.x += (dx / len) * ENEMY_CHASE_SPEED;
+            e.position.z += (dz / len) * ENEMY_CHASE_SPEED;
+        } else {
+            e.position.x += ENEMY_PATROL_SPEED * e.userData.direction;
+            if (Math.abs(e.position.x - e.userData.baseX) > 2) e.userData.direction *= -1;
+        }
+    });
+}
+
+function drawMiniMap() {
+    mapCtx.clearRect(0, 0, 150, 150);
+    mapCtx.fillStyle = "#eee";
+    mapCtx.fillRect(0, 0, 150, 150);
+
+    mapCtx.fillStyle = "blue";
+    mapCtx.beginPath();
+    mapCtx.arc(75 + player.x * 4, 75 + player.z * 4, 5, 0, Math.PI * 2);
+    mapCtx.fill();
+
+    mapCtx.fillStyle = "red";
+    enemies.forEach(e => {
+        mapCtx.beginPath();
+        mapCtx.arc(75 + e.position.x * 4, 75 + e.position.z * 4, 4, 0, Math.PI * 2);
+        mapCtx.fill();
     });
 }
 
@@ -252,8 +299,11 @@ function closeQuiz() {
 function checkDoor() {
     if (!solved || !currentDoor) return;
     if (Math.hypot(player.x - currentDoor.position.x, player.z - currentDoor.position.z) < 1.4) {
-        currentDoor.position.y -= 0.05;
-        if (currentDoor.position.y < -3) {
+        doorAudio.play();
+        if (doorAngle < Math.PI / 2) {
+            doorAngle += 0.03;
+            currentDoor.rotation.y = doorAngle;
+        } else {
             walls = walls.filter(w => w !== currentDoor);
             nextLevel();
         }
