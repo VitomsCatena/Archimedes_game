@@ -1,9 +1,11 @@
 let scene, camera, renderer;
 let player = { x: 0, y: 1.6, z: 4 };
+let playerMesh;
 let yaw = 0;
 let keys = {};
 
 const MAX_LEVELS = 5;
+const ENEMY_SPEED = 0.02;
 let currentLevel = 1;
 let puzzles = [];
 let walls = [];
@@ -32,11 +34,14 @@ const popup = document.getElementById("popup");
 const startScreen = document.getElementById("startScreen");
 
 function getMainQuiz(level) {
-    if (level === 1) return ["3 + 2 = ?", "5"];
-    if (level === 2) return ["6 × 2 = ?", "12"];
-    if (level === 3) return ["15 − 7 = ?", "8"];
-    if (level === 4) return ["9 × 3 = ?", "27"];
-    return ["36 ÷ 3 = ?", "12"];
+    const quizzes = [
+        ["3 + 2 = ?", "5"],
+        ["6 × 2 = ?", "12"],
+        ["15 − 7 = ?", "8"],
+        ["9 × 3 = ?", "27"],
+        ["36 ÷ 3 = ?", "12"]
+    ];
+    return quizzes[level - 1];
 }
 
 function getEnemyQuiz() {
@@ -53,9 +58,7 @@ startScreen.onclick = () => {
 };
 
 document.addEventListener("mousemove", e => {
-    if (document.pointerLockElement === document.body) {
-        yaw -= e.movementX * 0.002;
-    }
+    if (document.pointerLockElement === document.body) yaw -= e.movementX * 0.002;
 });
 
 function init() {
@@ -72,6 +75,12 @@ function init() {
     const sun = new THREE.DirectionalLight(0xfff2cc, 1.2);
     sun.position.set(10, 20, 10);
     scene.add(sun);
+
+    playerMesh = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.35, 1.0, 4, 8),
+        new THREE.MeshStandardMaterial({ color: 0x2f4f4f })
+    );
+    scene.add(playerMesh);
 
     buildLevel();
 
@@ -131,6 +140,8 @@ function buildLevel() {
         );
         enemy.position.set(-4 + i * 8, 0.75, z - 4);
         enemy.userData.quiz = getEnemyQuiz();
+        enemy.userData.baseX = enemy.position.x;
+        enemy.userData.direction = 1;
         enemies.push(enemy);
         scene.add(enemy);
     }
@@ -141,6 +152,7 @@ function buildLevel() {
 function animate() {
     requestAnimationFrame(animate);
     updateMovement();
+    updateEnemies();
     checkPuzzle();
     checkEnemies();
     checkDoor();
@@ -162,8 +174,22 @@ function updateMovement() {
         player.x = nx; player.z = nz;
     }
 
-    camera.position.set(player.x, player.y, player.z);
-    camera.rotation.y = yaw;
+    playerMesh.position.set(player.x, 0.9, player.z);
+
+    const camDist = 3.5;
+    camera.position.set(
+        player.x + Math.sin(yaw) * camDist,
+        2.5,
+        player.z + Math.cos(yaw) * camDist
+    );
+    camera.lookAt(player.x, 1.2, player.z);
+}
+
+function updateEnemies() {
+    enemies.forEach(e => {
+        e.position.x += ENEMY_SPEED * e.userData.direction;
+        if (Math.abs(e.position.x - e.userData.baseX) > 2) e.userData.direction *= -1;
+    });
 }
 
 function checkCollision(x, z) {
