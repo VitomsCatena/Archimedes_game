@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>The Archimedes Labyrinth – Temple Edition</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="startScreen">Click to Start – Temple of Archimedes</div>
+
+<div id="hud">
+    <div id="levelText"></div>
+    <div id="puzzleText"></div>
+    <div id="timerText"></div>
+    <div id="scoreText"></div>
+    <div class="instructions">
+        Move: W A S D | Look: Mouse | Solve puzzles to open doors
+    </div>
+</div>
+
+<div id="quizUI" class="hidden">
+    <div id="quizQuestion"></div>
+    <input id="quizAnswer" type="text" placeholder="Your answer" />
+    <button id="submitAnswer">Submit</button>
+</div>
+
+<div id="popup" class="hidden">Correct! Well done.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
