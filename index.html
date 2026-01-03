@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>The Archimedes Labyrinth – Temple Edition</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
@@ -15,9 +15,12 @@
     <div id="timerText"></div>
     <div id="scoreText"></div>
     <div class="instructions">
-        W A S D to move • Mouse to rotate camera • Solve puzzles to progress
+        W A S D to move • Mouse to rotate camera • Solve puzzles to open doors
     </div>
 </div>
+
+<!-- Mini-map / Compass -->
+<canvas id="miniMap" width="150" height="150"></canvas>
 
 <div id="quizUI" class="hidden">
     <div id="quizQuestion"></div>
@@ -27,7 +30,11 @@
 
 <div id="popup" class="hidden">Correct! Well done.</div>
 
+<audio id="ambientAudio" src="assets/ambient_temple.mp3" loop></audio>
+<audio id="enemyAudio" src="assets/enemy_alert.mp3"></audio>
+<audio id="doorAudio" src="assets/door_open.mp3"></audio>
+
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="game.js"></script>
+<script src="js/game.js"></script>
 </body>
 </html>
